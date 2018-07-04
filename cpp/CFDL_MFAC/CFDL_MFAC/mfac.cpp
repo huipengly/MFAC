@@ -14,7 +14,7 @@ Mfac::Mfac(const double &eta, const double &mu, const double &rho, const double 
 	du(0),
 	du_pre(0),
 	phi_first(2),
-	phi_pre(phi_first)
+	phi_pre(2)		//phi_pre(phi_first)为什么错，C++ prime上看到过
 {
 }
 
