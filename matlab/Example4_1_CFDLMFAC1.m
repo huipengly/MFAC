@@ -1,5 +1,5 @@
 clear all;
-%close all;
+close all;
 N=1000;
 
 %¿ØÖÆÆ÷²ÎÊý
@@ -38,7 +38,7 @@ for k=3:N
     a(k)=1+round(k/500);
     fai(k,1:nu)=fai(k-1,1:nu)+eita*(y(k)-y(k-1)-fai(k-1,1:nu)*du(k-1,1:nu)')*du(k-1,1:nu)/(miu+du(k-1,1:nu)*du(k-1,1:nu)');
     if (fai(k,1)<10^(-5)) || ((du(k-1,1:nu)*du(k-1,1:nu)')^0.5<10^(-5))
-        fai(k,1)=0.5;
+        fai(k,1)=2;
     end
     if nu==1
         u(k) = u(k-1)+rou*fai(k,1)*(yd(k+1)-y(k))/(lamda+fai(k,1).^2);        
@@ -82,7 +82,7 @@ for k=3:N
     a(k)=1+round(k/500);
     fai2(k,1:nu)=fai2(k-1,1:nu)+eita*(y2(k)-y2(k-1)-fai2(k-1,1:nu)*du2(k-1,1:nu)')*du2(k-1,1:nu)/(miu+du2(k-1,1:nu)*du2(k-1,1:nu)');
     if (fai2(k,1)<10^(-5)) || ((du2(k-1,1:nu)*du2(k-1,1:nu)')^0.5<10^(-5))
-        fai2(k,1)=0.5;
+        fai2(k,1)=2;
     end
     if nu==1
         u2(k) = u2(k-1)+rou*fai2(k,1)*(yd(k+1)-y2(k))/(lamda+fai2(k,1).^2);        
