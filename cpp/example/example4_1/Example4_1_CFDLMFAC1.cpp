@@ -55,40 +55,40 @@ int main()
     vector<double> phi{2, 2};       //!< φ
     vector<double> a{0, 0};
     vector<double> err{0, 0};
-    for (int i = 2; i != 1000; ++i)
+    for (int k = 2; k != 1000; ++k)
     {
-		a.push_back(1 + round((i + 1) / 500.0));
-        phi.push_back(phi[i - 1] + eta * (y[i] - y[i - 1] - phi[i - 1] * du[i - 1]) * du[i - 1] / (mu + du[i - 1] * du[i - 1]));
+		a.push_back(1 + round((k + 1) / 500.0));
+        phi.push_back(phi[k - 1] + eta * (y[k] - y[k - 1] - phi[k - 1] * du[k - 1]) * du[k - 1] / (mu + du[k - 1] * du[k - 1]));
         
-        if (phi[i] < 1e-5 || sqrt(du[i - 1] * du[i - 1]) < 1e-5)
+        if (phi[k] < 1e-5 || sqrt(du[k - 1] * du[k - 1]) < 1e-5)
         {
-            phi[i] = 0.5;
+            phi[k] = 0.5;
         }
 
         if (nu == 1)
         {
-            u.push_back(u[i - 1] + rho * phi[i] * (yd[i + 1] - y[i]) / (lambda + phi[i] * phi[i]));
+            u.push_back(u[k - 1] + rho * phi[k] * (yd[k + 1] - y[k]) / (lambda + phi[k] * phi[k]));
         }
         else
         {
 			// 例4.1不需要，还没有实现
             // @todo 矩阵运算
             // u(k) = u(k-1)+rou*fai(k,1)*(yd(k+1)-y(k)-fai(k,2:nu)*du(k-1,1:nu-1)')/(lamda+fai(k,1).^2); 
-            // u.push_back(u[i - 1] + rho * phi[i] * (yd[i + 1] - y(k) - phi[i] * du[i]))
+            // u.push_back(u[k - 1] + rho * phi[k] * (yd[k + 1] - y(k) - phi[k] * du[k]))
         }
 
         // 根据模型计算输出值，实际中不需要
-        if (i <= 499)
+        if (k <= 499)
         {
-            y.push_back(y[i] / (1 + pow(y[i], 2)) + pow(u[i], 3));
+            y.push_back(y[k] / (1 + pow(y[k], 2)) + pow(u[k], 3));
         }
         else
         {
-            y.push_back((y[i] * y[i - 1] * y[i - 2] * u[i - 1] * (y[i - 2] - 1) + a[i] * u[i]) / (1 + pow(y[i - 1], 2) + pow(y[i - 2], 2)));
+            y.push_back((y[k] * y[k - 1] * y[k - 2] * u[k - 1] * (y[k - 2] - 1) + a[k] * u[k]) / (1 + pow(y[k - 1], 2) + pow(y[k - 2], 2)));
         }
-        du.push_back(u[i] - u[i - 1]);
+        du.push_back(u[k] - u[k - 1]);
 
-        err.push_back(yd[i] - y[i]);
+        err.push_back(yd[k] - y[k]);
     }
 
     return 0;
