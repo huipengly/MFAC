@@ -22,7 +22,7 @@ Mfac::~Mfac()
 {
 }
 
-double Mfac::mfac_out(double yd, double y)
+double Mfac::out(double yd, double y)
 {
 	//更新期望值和实际输出值
 	// @todo:研究函数变量和成员函数同名时怎么办

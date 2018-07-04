@@ -6,7 +6,7 @@ class Mfac
 public:
 	Mfac(const double & eta, const double & mu, const double & rho, const double & lambda, const double & epsilon);
 	~Mfac();
-	double mfac_out(double yd, double y);
+	double out(double yd, double y);
 protected:
 	const double eta;           //!< ¦Ç
 	const double mu;            //!< ¦Ì
