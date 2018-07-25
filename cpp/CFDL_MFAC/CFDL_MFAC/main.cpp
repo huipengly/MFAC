@@ -1,4 +1,4 @@
-#include "mfac.h"
+#include "mfac_miso.h"
 
 #include <vector>
 #include <cmath>
@@ -42,7 +42,7 @@ int main()
 	vector<double> a{ 0, 0 };
 	vector<double> err{ 0, 0 };
 
-	Mfac mfac(eta, mu, rho, lambda, 1e-5);
+	MfacMiso mfac(eta, mu, rho, lambda, 1e-5);
 	for (int k = 2; k != 1000; ++k)
 	{
 		a.push_back(1 + round((k + 1) / 500.0));
