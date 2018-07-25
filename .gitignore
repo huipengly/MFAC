@@ -1,5 +1,12 @@
 # Created by https://www.gitignore.io/api/c++,matlab,visualstudio
 
+### VisualStudioCode ###
+**/.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
 ### C++ ###
 # Prerequisites
 *.d
