@@ -116,10 +116,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="mfac.cpp" />
+    <ClCompile Include="mfac_miso.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mfac.h" />
+    <ClInclude Include="mfac_miso.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

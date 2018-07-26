@@ -18,12 +18,12 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="mfac.cpp">
+    <ClCompile Include="mfac_miso.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mfac.h">
+    <ClInclude Include="mfac_miso.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
