@@ -1,10 +1,9 @@
 /**
- * @brief ffdl_mfac方法
+ * @brief 全格动态线性化的无模型自适应控制
  * 
- * @file mfac_miso.h
+ * @file ffdl_mfac.h
  * @author huipengly
- * @date 2018-08-17
- * @note 无模型自适应控制，全格式动态线性化
+ * @date 2018-08-19
  */
 #pragma once
 #include <cmath>

@@ -1,15 +1,26 @@
+/**
+ * @brief 全格动态线性化的无模型自适应控制
+ * 
+ * @file ffdl_mfac.cpp
+ * @author huipengly
+ * @date 2018-08-19
+ */
 #include "ffdl_mfac.h"
 #include <numeric>
 using std::accumulate;
 
+/**
+ * @brief sign函数
+ * 
+ * @param x 
+ * @return int 小于0返回-1， 大于0返回1， 等于0返回0
+ */
 int sign(double x)
 {
-	if (x> 0) return 1;
-	if (x <0) return -1;
+	if (x > 0) return 1;
+	if (x < 0) return -1;
 	return 0;
 }
-
-//double accumulate
 
 const int Ly = 1;
 const int Lu = 2;
@@ -103,11 +114,7 @@ double FfdlMfac::out(double yd, double y)
 		h.push_back(yy);
 	}
 
-	//for (auto u : du_)
-	//{
-	//	h.push_back(u);
-	//}
-
+	// 这里逆序将du放入h
 	for (auto i = du_.size() - 1; i != -1; --i)
 	{
 		h.push_back(du_[i]);
@@ -130,7 +137,7 @@ double FfdlMfac::out(double yd, double y)
 		phi_[i] = last_phi[i] + eta_ * (y_[Ly_] - y_[Ly_ - 1] - phi_h) * h[i] / (mu_ + h_2norm_2);
 	}
 
-	// 判断是否重置phi
+	// 判断是否重置phi，例题的重置方法和书上不同，用重置和matlab程序不同。
 	//double phi_2norm = 0;					// phi的2范数
 	//for (auto p : phi_)
 	//{
@@ -150,7 +157,7 @@ double FfdlMfac::out(double yd, double y)
 	}
 	dy_.back() = y_[Ly_] - y_[Ly_ - 1];
 
-	// 计算u
+	// 计算u， TODO:这里写的公式和书上不同，是按照matlab例程写的。将这里改成书上的，提高rho的个数
 	//u_[Lu_] = u_[Lu_ - 1] + (rho_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1] * (yd - y_[Ly_]) - phi_[Ly_ + 1] * accumulate(phi_[0], phi_[Ly_ - 1], 0) * 
 	u_[Lu_] = u_[Lu_ - 1] + rho_ * phi_[Ly_ + 1 - 1] * (yd - y_[Ly_] - phi_[1 - 1] * dy_[Ly_ - 1] - phi_[Ly_ + Lu_ - 1] * du_[Lu_ - 1]) / (lambda_ + phi_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1]);
 
@@ -162,5 +169,4 @@ double FfdlMfac::out(double yd, double y)
 	du_.back() = u_[Lu_] - u_[Lu_ - 1];
 
 	return u_.back();
-
 }
