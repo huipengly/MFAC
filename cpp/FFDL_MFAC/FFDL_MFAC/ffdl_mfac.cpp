@@ -13,9 +13,9 @@ int sign(double x)
 
 const int Ly = 1;
 const int Lu = 2;
-double y_init[Ly + 1] = { 0, 0 };
-double u_init[Lu + 1] = { 0, 0, 0 };
-double phi_init[Ly + Lu] = { 0, 0, 0 };
+double y_init[Ly + 1] = { 1, 0.2 };
+double u_init[Lu + 1] = { 0, 0, 0.5 };
+double phi_init[Ly + Lu] = { -2, 0.5, 0.2 };
 
 /**
  * @brief Construct a new Mfac Miso:: Mfac Miso object
@@ -24,10 +24,11 @@ double phi_init[Ly + Lu] = { 0, 0, 0 };
  *       这里不考虑Ly <= 0 的情况
  */
 FfdlMfac::FfdlMfac() :
-    eta_(1),
+    eta_(0.2),
     mu_(1), 
-    lambda_(3),
+    lambda_(7),
     epsilon_(1e-5),
+	rho_(0.7),
 	Ly_(Ly),
 	Lu_(Lu),
 	phi_number_(Ly_ + Lu_)
@@ -80,19 +81,36 @@ FfdlMfac::~FfdlMfac()
  */
 double FfdlMfac::out(double yd, double y)
 {
+	// 更新y
+	for (auto i = 0; i != y_.size() - 1; ++i)
+	{
+		y_[i] = y_[i + 1];
+	}
+	y_.back() = y;
+	// 更新u
+	for (auto i = 0; i != u_.size() - 1; ++i)
+	{
+		u_[i] = u_[i + 1];
+	}
+
 	vector<double> last_phi = phi_;		// 记录上一次的phi
 
 	vector<double> h;					// h矩阵
 	double h_2norm_2 = 0;				// h矩阵2范数的平方
 	// 构造h矩阵
-	for (auto yy : y_)
+	for (auto yy : dy_)
 	{
 		h.push_back(yy);
 	}
 
-	for (auto u : u_)
+	//for (auto u : du_)
+	//{
+	//	h.push_back(u);
+	//}
+
+	for (auto i = du_.size() - 1; i != -1; --i)
 	{
-		h.push_back(u);
+		h.push_back(du_[i]);
 	}
 
 	for (auto hh : h)
@@ -113,48 +131,36 @@ double FfdlMfac::out(double yd, double y)
 	}
 
 	// 判断是否重置phi
-	double phi_2norm;					// phi的2范数
-	for (auto p : phi_)
-	{
-		phi_2norm += p * p;
-	}
-	phi_2norm = sqrt(phi_2norm);
+	//double phi_2norm = 0;					// phi的2范数
+	//for (auto p : phi_)
+	//{
+	//	phi_2norm += p * p;
+	//}
+	//phi_2norm = sqrt(phi_2norm);
 
-	if (phi_2norm < epsilon_ || sqrt(h_2norm_2) < epsilon_ || sign(phi_[Ly_ + 1]) != sign(phi_init_value_[Ly_ + 1]))
+	//if (phi_2norm < epsilon_ || sqrt(h_2norm_2) < epsilon_ || sign(phi_[Ly_ + 1]) != sign(phi_init_value_[Ly_ + 1]))
+	//{
+	//	phi_ = phi_init_value_;
+	//}
+
+	// 更新dy
+	for (auto i = 0; i != dy_.size() - 1; ++i)
 	{
-		phi_ = phi_init_value_;
+		dy_[i] = dy_[i + 1];
 	}
+	dy_.back() = y_[Ly_] - y_[Ly_ - 1];
 
 	// 计算u
-	u_[Lu_] = u_[Lu_ - 1] + (rho_[Ly_ + 1] * phi_[Ly_ + 1] * (yd - y_[Ly_]) - phi_[Ly_ + 1] * accumulate(phi_[0], phi_[Ly_ - 1], 0)
+	//u_[Lu_] = u_[Lu_ - 1] + (rho_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1] * (yd - y_[Ly_]) - phi_[Ly_ + 1] * accumulate(phi_[0], phi_[Ly_ - 1], 0) * 
+	u_[Lu_] = u_[Lu_ - 1] + rho_ * phi_[Ly_ + 1 - 1] * (yd - y_[Ly_] - phi_[1 - 1] * dy_[Ly_ - 1] - phi_[Ly_ + Lu_ - 1] * du_[Lu_ - 1]) / (lambda_ + phi_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1]);
 
-    double du1 = u1_[1] - u1_[0];
-    double du2 = u2_[1] - u2_[0];
+	// 更新du
+	for (auto i = 0; i != du_.size() - 1; ++i)
+	{
+		du_[i] = du_[i + 1];
+	}
+	du_.back() = u_[Lu_] - u_[Lu_ - 1];
 
-    y_[0] = y_[1];
-    u1_[0] = u1_[1];
-    u2_[0] = u2_[1];
-    phi1_[0] = phi1_[1];
-    phi2_[0] = phi2_[1];
+	return u_.back();
 
-    y_[1] = y;
-
-    phi1_[1] = phi1_[0] + eta_ * (y_[1] - y_[0] - phi1_[0] * du1 - phi2_[0] * du2) * du1 / (mu_ + du1 * du1 + du2 * du2);
-    phi2_[1] = phi2_[0] + eta_ * (y_[1] - y_[0] - phi1_[0] * du1 - phi2_[0] * du2) * du2 / (mu_ + du1 * du1 + du2 * du2);
-
-    if (abs(phi1_[1]) < epsilon_ || abs(phi1_[1]) > M_)
-    {
-        phi1_[1] = phi1_init_value_;
-    }
-    if (abs(phi2_[1]) < epsilon_ || abs(phi2_[1]) > M_)
-    {
-        phi2_[1] = phi2_init_value_;
-    }
-
-    u1_[1] = u1_[0] + rho_ * phi1_[1] * (yd - y_[1]) / (lambda_ + phi1_[1] * phi1_[1] + phi2_[1] * phi2_[1]);
-    u2_[1] = u2_[0] + rho_ * phi2_[1] * (yd - y_[1]) / (lambda_ + phi1_[1] * phi1_[1] + phi2_[1] * phi2_[1]);
-
-    vector<double> ret_u;
-    ret_u.push_back(u1_[1]); ret_u.push_back(u2_[1]);
-    return ret_u;
 }

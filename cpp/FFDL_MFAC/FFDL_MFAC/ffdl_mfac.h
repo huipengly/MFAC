@@ -20,7 +20,7 @@ public:
 protected:
     double eta_;           					//!< η
     double mu_;            					//!< μ
-    vector<double> rho_;					//!< ρ
+    double rho_;							//!< ρ
     double lambda_;							//!< λ
     double epsilon_;						//!< ε
 	vector<double> phi_init_value_;         //!< φ(1)的值
