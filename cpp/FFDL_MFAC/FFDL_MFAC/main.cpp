@@ -36,7 +36,7 @@ int main()
 	// 仿真过程
 	for (int i = 6; i != N - 1; ++i)
 	{
-		if (i == 475)
+		if (i == 8)
 		{
 			double a = 0;
 		}

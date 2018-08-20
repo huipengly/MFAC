@@ -6,8 +6,6 @@
  * @date 2018-08-19
  */
 #include "ffdl_mfac.h"
-#include <numeric>
-using std::accumulate;
 
 /**
  * @brief sign函数
@@ -27,6 +25,7 @@ const int Lu = 2;
 double y_init[Ly + 1] = { 1, 0.2 };
 double u_init[Lu + 1] = { 0, 0, 0.5 };
 double phi_init[Ly + Lu] = { -2, 0.5, 0.2 };
+double rho_value[Ly + Lu] = { 0.7, 0.7, 0.7 };
 
 /**
  * @brief Construct a new Mfac Miso:: Mfac Miso object
@@ -39,16 +38,15 @@ FfdlMfac::FfdlMfac() :
     mu_(1), 
     lambda_(7),
     epsilon_(1e-5),
-	rho_(0.7),
 	Ly_(Ly),
 	Lu_(Lu),
-	phi_number_(Ly_ + Lu_)
+	h_number_(Ly_ + Lu_)
 {
 	// 根据Ly和Lu定义需要记录的y和u的个数
-    y_.resize(Ly_ + 1);
-	dy_.resize(Ly_);
-    u_.resize(Lu_ + 1);
-	du_.resize(Lu_);
+    y_.resize(Ly_ + 1, 0);
+	dy_.resize(Ly_, 0);
+    u_.resize(Lu_ + 1, 0);
+	du_.resize(Lu_ + Ly_ + Ly_, 0);
 
 	// 初始化y、dy、u、du
 	for (auto i = 0; i != y_.size(); ++i)
@@ -64,18 +62,25 @@ FfdlMfac::FfdlMfac() :
 	{
 		u_[i] = u_init[i];
 	}
-	for (auto i = 0; i != du_.size(); ++i)
+	for (auto i = u_.size() - 1, j = du_.size() - 1; i != 0; --i, --j)
 	{
-		du_[i] = u_[i + 1] - u_[i];
+		du_[j] = u_[i] - u_[i - 1];
 	}
 
 	// 初始化phi
-	phi_.resize(phi_number_);
-	phi_init_value_.resize(phi_number_);
+	phi_.resize(h_number_);
+	phi_init_value_.resize(h_number_);
 	for (auto i = 0; i != phi_.size(); ++i)
 	{
 		phi_[i] = phi_init[i];
 		phi_init_value_[i] = phi_init[i];
+	}
+
+	// 初始化rho
+	rho_.resize(Ly_ + Lu_, 0);
+	for (auto i = 0; i != rho_.size(); ++i)
+	{
+		rho_[i] = rho_value[i];
 	}
 }
 
@@ -115,9 +120,9 @@ double FfdlMfac::out(double yd, double y)
 	}
 
 	// 这里逆序将du放入h
-	for (auto i = du_.size() - 1; i != -1; --i)
+	for (auto i = 0; i != Lu_; ++i)
 	{
-		h.push_back(du_[i]);
+		h.push_back(du_[du_.size() - i - 1]);
 	}
 
 	for (auto hh : h)
@@ -127,17 +132,18 @@ double FfdlMfac::out(double yd, double y)
 
 	// 计算新的phi
 	double phi_h = 0;					// phi乘h矩阵的值
-	for (auto i = 0; i != phi_number_; ++i)
+	for (auto i = 0; i != h_number_; ++i)
 	{
 		phi_h += phi_[i] * h[i];
 	}
 
-	for (auto i = 0; i != phi_number_; ++i)
+	for (auto i = 0; i != h_number_; ++i)
 	{
 		phi_[i] = last_phi[i] + eta_ * (y_[Ly_] - y_[Ly_ - 1] - phi_h) * h[i] / (mu_ + h_2norm_2);
 	}
 
-	// 判断是否重置phi，例题的重置方法和书上不同，用重置和matlab程序不同。
+	//// 判断是否重置phi，例题的重置方法和书上不同，用重置和matlab程序不同。
+	//// FIXME:重置条件有问题么？测试书上例题，如果加入重置会使第二个例子发散
 	//double phi_2norm = 0;					// phi的2范数
 	//for (auto p : phi_)
 	//{
@@ -157,9 +163,21 @@ double FfdlMfac::out(double yd, double y)
 	}
 	dy_.back() = y_[Ly_] - y_[Ly_ - 1];
 
-	// 计算u， TODO:这里写的公式和书上不同，是按照matlab例程写的。将这里改成书上的，提高rho的个数
-	//u_[Lu_] = u_[Lu_ - 1] + (rho_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1] * (yd - y_[Ly_]) - phi_[Ly_ + 1] * accumulate(phi_[0], phi_[Ly_ - 1], 0) * 
-	u_[Lu_] = u_[Lu_ - 1] + rho_ * phi_[Ly_ + 1 - 1] * (yd - y_[Ly_] - phi_[1 - 1] * dy_[Ly_ - 1] - phi_[Ly_ + Lu_ - 1] * du_[Lu_ - 1]) / (lambda_ + phi_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1]);
+	// 计算u
+	// 参数1和2分别是无模型公式里的两个分母部分，书P84上方
+	double parameter1 = 0, parameter2 = 0;
+	for (auto i = 0; i != Ly_; ++i)
+	{
+		parameter1 += rho_[i] * phi_[i] * dy_[dy_.size() - 1 - i + 1 - 1];			// dy_.size() - 1这部分是dy_的最后一个值，即书上dy(k)，书上此处公式未dy(k - i + 1),又由于c++是从0开始记录，不是从1，所以最后又加入一个-1
+	}
+	for (auto i = Ly_ + 2 - 1; i != Ly_ + Lu_; ++i)
+	{
+		parameter2 += rho_[i] * phi_[i] * du_[du_.size() - 1 - Ly_ - i + 1 - 1];
+	}
+
+	u_.back() = u_[Lu_ - 1] + 
+				phi_[Ly_ + 1 - 1] * (rho_[Ly_ + 1 - 1] * (yd - y_[Ly_]) -  parameter1 -  parameter2)
+				/ (lambda_ + phi_[Ly_ + 1 - 1] * phi_[Ly_ + 1 - 1]);
 
 	// 更新du
 	for (auto i = 0; i != du_.size() - 1; ++i)

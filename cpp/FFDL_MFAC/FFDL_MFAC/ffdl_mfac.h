@@ -19,7 +19,7 @@ public:
 protected:
     double eta_;           					//!< η
     double mu_;            					//!< μ
-    double rho_;							//!< ρ
+    vector<double> rho_;					//!< ρ
     double lambda_;							//!< λ
     double epsilon_;						//!< ε
 	vector<double> phi_init_value_;         //!< φ(1)的值
@@ -31,6 +31,6 @@ protected:
     vector<double> u_;				        //!< 控制器输出
 	vector<double> du_;						//!< 控制器输出的差分
     vector<double> phi_;					//!< PPD φ的估算值，n*m维。n记录前n次的phi，每个phi有m个数
-	int phi_number_;
+	int h_number_;							//!< h矩阵的数目
 };
 
