@@ -2,6 +2,32 @@ clear all;
 %close all;
 N=1000;
 
+% 产生噪声 xi是白噪声，e是有色噪声
+c = [1 -0.5];
+nc = length(c) - 1;
+xik=zeros(nc,1);  %白噪声初值
+xii=randn(N,1);  %产生均值为0，方差为1的高斯白噪声序列
+
+for k=1:N
+    e(k)=c*[xii(k);xik];  %产生有色噪声
+    %数据更新
+    for i=nc:-1:2
+        xik(i)=xik(i-1);
+    end
+    xik(1)=xii(k);
+end
+% 无噪声
+% rand_data = zeros(N, 1);
+% 使用随机噪声
+% rand_data = rand(N, 1);
+% 使用白噪声
+% rand_data = xii;
+% 使用有色噪声
+rand_data = e;
+
+% 噪声减小10倍
+rand_data = rand_data ./ 10;
+
 %控制器参数
 nu=1;
 eita =1;
@@ -30,7 +56,6 @@ fai(1:3,2)=0.1;
 fai(1:3,3)=0.1;
 fai(1:3,4)=0.1;
 xi(1:3) = 0.1;
-rand_data = rand(N, 1) ./ 10;
 %程序循环
 for k=4:N
     a(k)=1+round(k/500);
@@ -125,7 +150,7 @@ plot(0:k,y,'-.b','LineWidth',2);hold on;
 plot(1:step:N,y(1:step:N),'bs','MarkerSize',mark,'LineWidth',2);hold on;
 plot(0:k,y2,'--r','LineWidth',2);
 plot(10:step:N,y2(10:step:N),'r^','MarkerSize',mark,'LineWidth',2);hold on;
-grid on;xlabel('时刻');ylabel('跟踪性能');legend({'y^{*}(k)','\lambda=2时的输出y(k)','\lambda=15时的输出y(k)'},'Interpreter','tex');
+grid on;xlabel('时刻');ylabel('跟踪性能');legend({'y^{*}(k)','改进方法','\lambda=10时的输出y(k)'},'Interpreter','tex');
 xlim([0,1000]);ylim([-1,2.8]);
 
 figure(2)
@@ -137,7 +162,7 @@ plot(1:step:N,u(1:step:N),'bs','MarkerSize',mark,'LineWidth',2);hold on;
 plot(u2,'r--','LineWidth',2);
 plot(10:step:N,u2(10:step:N),'r^','MarkerSize',mark,'LineWidth',2);hold on;
 ylim([-1,2.7]);
-grid on;xlabel('时刻');ylabel('控制输入');legend({'\lambda=2时的控制输入u(k)','\lambda=15时的控制输入u(k)'},'Interpreter','tex');
+grid on;xlabel('时刻');ylabel('控制输入');legend({'改进方法','\lambda=10时的控制输入u(k)'},'Interpreter','tex');
 
 
 figure(3)
@@ -149,7 +174,7 @@ plot(1:step:N,fai(1:step:N),'bs','MarkerSize',mark,'LineWidth',2);hold on;
 plot(fai2,'--r','LineWidth',2);grid on;
 plot(10:step:N,fai2(10:step:N),'r^','MarkerSize',mark,'LineWidth',2);hold on;
 ylim([-1,2.5]);
-xlabel('时刻');ylabel('PPD估计值');legend({'\lambda=2时PPD的估计值','\lambda=15时PPD的估计值'},'Interpreter','tex');
+xlabel('时刻');ylabel('PPD估计值');legend({'改进方法','\lambda=10时PPD的估计值'},'Interpreter','tex');
 
 
 %plot(yd,'k');hold on;
