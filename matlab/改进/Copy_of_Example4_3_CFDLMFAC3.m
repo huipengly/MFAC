@@ -9,6 +9,7 @@ miu =1;
 rou1=0.6;
 rou2=0.6;
 rou3=0.6;
+rou4=0.6;
 lamda =10;
 
 %≥ı÷µ
@@ -29,6 +30,7 @@ fai(1:3,2)=0.1;
 fai(1:3,3)=0.1;
 fai(1:3,4)=0.1;
 xi(1:3) = 0.1;
+rand_data = rand(N, 1) ./ 10;
 %≥Ã–Ú—≠ª∑
 for k=4:N
     a(k)=1+round(k/500);
@@ -37,7 +39,7 @@ for k=4:N
     if (fai(k,1)<10^(-5)) || ((du(k-1,1:nu)*du(k-1,1:nu)')^0.5<10^(-5))
         fai(k,1)=2;
     end
-    u(k) = u(k-1)+(rou1*fai(k,1)*(yd(k+1)-y(k)) - rou2*fai(k,1)*fai(k,2)*xi(k) - rou2*fai(k,1)*fai(k,3)*xi(k - 1) - rou3*fai(k,1)*fai(k,4)*xi(k - 2))/(lamda+fai(k,1).^2);
+    u(k) = u(k-1)+(rou1*fai(k,1)*(yd(k+1)-y(k)) - rou2*fai(k,1)*fai(k,2)*xi(k) - rou3*fai(k,1)*fai(k,3)*xi(k - 1) - rou4*fai(k,1)*fai(k,4)*xi(k - 2))/(lamda+fai(k,1).^2);
     %model
     b(k)=0.1+0.1*round(k/100);
     if k<=200
@@ -55,7 +57,7 @@ for k=4:N
         end
     end
     
-    y(k+1) = y(k+1) + rand / 10;
+    y(k+1) = y(k+1) + rand_data(k);
                     
     for i=1:nu
         du(k,i)=u(k-i+1)-u(k-i);
@@ -104,7 +106,7 @@ for k=3:N
             end
         end
     end
-    y(k+1) = y(k+1) + rand / 10;
+    y2(k+1) = y2(k+1) + rand_data(k);
     for i=1:nu
         du2(k,i)=u2(k-i+1)-u2(k-i);
     end
