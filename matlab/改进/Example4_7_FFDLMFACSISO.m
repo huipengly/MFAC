@@ -147,6 +147,10 @@ for k=4:N
 %     y(k+1) = y(k+1) + rand_data(k);
 end
 
+% Çó·½²î
+var_y = sum((y(1:N) - refs).^ 2) / N
+var_y2 = sum((y2(1:N) - refs).^ 2) / N
+
 mark=8;
 step=20;
 figure(1)
