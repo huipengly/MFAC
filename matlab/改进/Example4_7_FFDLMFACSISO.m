@@ -3,9 +3,40 @@ close all;
 %采样点
 N=700;
 
+% 产生噪声 xii是白噪声，e是有色噪声
+d=[1 -1.5 0.7 0.1]; c=[1 0.5 0.2];  % 分子分母多项式系数
+nd=length(d)-1 ;nc=length(c)-1;   %阶次
+xik=zeros(nc,1);  %白噪声初值
+ek=zeros(nd,1);
+xii=randn(N,1);  %产生均值为0，方差为1的高斯白噪声序列
+
+for k=1:N
+    e(k)=-d(2:nd+1)*ek+c*[xii(k);xik+0.5];  %产生有色噪声
+    %数据更新
+    for i=nd:-1:2
+        ek(i)=ek(i-1);
+    end
+    ek(1)=e(k);
+    for i=nc:-1:2
+        xik(i)=xik(i-1);
+    end
+    xik(1)=xii(k);
+end
+% 无噪声
+% rand_data = zeros(N, 1);
+% 使用随机噪声
+% rand_data = rand(N, 1);
+% 使用白噪声
+% rand_data = xii;
+% 使用有色噪声
+rand_data = e;
+
+% 噪声减小100倍
+rand_data = rand_data ./ 100;
+
 %控制器参数
-ny=1;
-nu=2;
+ny=2;
+nu=1;
 % % % % %projection
 eita =0.2;
 miu =1;
@@ -75,6 +106,7 @@ for k=6:N
     a(k)=1;b(k)=0;
     b(k)=4*round(k./100)+sin(k/100);%
     y2(k+1)=(-0.9*a(k)*y2(k)+(b(k)+1)*u2(k))/(1+y2(k)^2);
+    y2(k+1) = y2(k+1) + rand_data(k);
     du2(k)=u2(k)-u2(k-1);
 end
 
@@ -142,6 +174,7 @@ for k=4:N
     a(k)=1;b(k)=0;
     b(k)=4*round(k./100)+sin(k/100);%
     y(k+1)=(-0.9*a(k)*y(k)+(b(k)+1)*u(k))/(1+y(k)^2);
+    y(k+1) = y(k+1) + rand_data(k);
     du(k)=u(k)-u(k-1);
     
 %     y(k+1) = y(k+1) + rand_data(k);
@@ -151,16 +184,21 @@ end
 var_y = sum((y(1:N) - refs).^ 2) / N
 var_y2 = sum((y2(1:N) - refs).^ 2) / N
 
+err_y = cumsum((y(1:N) - refs).^ 2);
+err_y2 = cumsum((y2(1:N) - refs).^ 2);
+
 mark=8;
 step=20;
 figure(1)
 plot(0,'-k','MarkerSize',mark,'LineWidth',2);hold on;
 plot(0,'-.bs','MarkerSize',mark,'LineWidth',2);hold on;
+plot(0,':r^','MarkerSize',mark,'LineWidth',2);hold on;
 set(gca,'LineWidth',2,'fontsize',28);
 plot(refs,'k','LineWidth',2);hold on;
 plot(y,'-.b','LineWidth',2);hold on;grid on;
-plot(y2,'--r','LineWidth',2);
+plot(y2,':r','LineWidth',2);
 plot(1:step:N,y(1:step:N),'bs','MarkerSize',mark,'LineWidth',2);hold on;
+plot(1:step:N,y2(1:step:N),'r^','MarkerSize',mark,'LineWidth',2);hold on;
 grid on;xlabel('时刻');ylabel('跟踪性能');legend({'y^{*}(k)','y(k)改进','y(k)原始'},'Interpreter','tex');
 xlim([0 700]);
 figure(2)
@@ -186,3 +224,16 @@ plot(0:k-1,fai(:,3),':g','LineWidth',2);
 plot(15:step:N,fai(15:step:N,3),'g>','MarkerSize',mark,'LineWidth',2);hold on;
 ylim([-3 2.5]);
 grid on;xlabel('时刻');ylabel('PG的估计值');legend('\phi_1(k)的估计值','\phi_2(k)的估计值','\phi_3(k)的估计值');
+
+figure(4)
+plot(0,'-.bs','MarkerSize',mark,'LineWidth',2);hold on;
+plot(0,'--r^','MarkerSize',mark,'LineWidth',2);hold on;
+set(gca,'LineWidth',2,'fontsize',28);
+plot(err_y,'-.b','LineWidth',2);hold on;
+plot(1:step:N,err_y(1:step:N),'bs','MarkerSize',mark,'LineWidth',2);hold on;
+plot(err_y2,'--r','LineWidth',2);grid on;
+plot(10:step:N,err_y2(10:step:N),'r^','MarkerSize',mark,'LineWidth',2);hold on;
+xlabel('时刻');ylabel('方差和');legend({'改进方法','原始'},'Interpreter','tex');
+
+figure()
+plot(rand_data)
